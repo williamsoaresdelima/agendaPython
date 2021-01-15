@@ -3,6 +3,8 @@ from core.models import Evento
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
+from datetime import datetime
+from django.http import Http404, JsonResponse
 
 
 # Create your views here.
@@ -62,8 +64,12 @@ def submit_evento(request):
 @login_required(login_url='/login/')
 def delete_evento(request, id_evento):
     usuario=request.user
-    Evento.objects.get(id=id_evento).delete()
+    try:
+        Evento.objects.get(id=id_evento).delete()
+    except Exception:
+            raise Http404()
     return redirect('/agenda')
+
 
 
 @login_required(login_url='/login/')
@@ -72,6 +78,23 @@ def lista_eventos(request):
     evento = Evento.objects.filter(usuario=usuario)
     dados = {'eventos': evento}
     return render(request, 'agenda.html', dados)
+
+
+@login_required(login_url='/login/')
+def json_lista_evento(request):
+    evento = Evento.objects.all().values('id','titulo')
+    return JsonResponse(list(evento),safe=False)
+
+#
+#
+# @login_required(login_url='/login/')
+# def lista_eventos(request):
+#     data_atual = datetime.now()
+#     usuario = request.user
+#     evento = Evento.objects.filter(usuario=usuario,
+#                                    data_evento__gt=data_atual)
+#     dados = {'eventos': evento}
+#     return render(request, 'agenda.html', dados)
 
 #
 # def index(request):
